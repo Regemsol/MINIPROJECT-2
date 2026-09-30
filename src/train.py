@@ -1,5 +1,6 @@
 """Train and evaluate the single KNN CKD classifier."""
 
+import argparse
 from pathlib import Path
 
 import joblib
@@ -17,15 +18,23 @@ MODEL_PATH = ROOT / "models" / "knn_ckd.pkl"
 TEST_PATH = ROOT / "data" / "ckd_test.csv"
 
 
-def train_model() -> tuple[Pipeline, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
+def train_model(retrain: bool = False) -> tuple[Pipeline, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]:
     frame = pd.read_csv(DATA_PATH)
     features = frame.drop(columns="class")
     target = frame["class"]
     x_train, x_test, y_train, y_test = train_test_split(
         features, target, test_size=0.2, stratify=target, random_state=42
     )
-    model = Pipeline([("scale", StandardScaler()), ("knn", KNeighborsClassifier(n_neighbors=5))])
-    model.fit(x_train, y_train)
+    if MODEL_PATH.exists() and not retrain:
+        model = joblib.load(MODEL_PATH)
+        print(f"Loaded saved model from {MODEL_PATH}")
+    else:
+        model = Pipeline([("scale", StandardScaler()), ("knn", KNeighborsClassifier(n_neighbors=5))])
+        model.fit(x_train, y_train)
+        MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, MODEL_PATH)
+        print(f"Saved model to {MODEL_PATH}")
+
     predictions = model.predict(x_test)
     print(f"Accuracy: {accuracy_score(y_test, predictions):.4f}")
     print(f"Precision: {precision_score(y_test, predictions, zero_division=0):.4f}")
@@ -35,12 +44,12 @@ def train_model() -> tuple[Pipeline, pd.DataFrame, pd.Series, pd.DataFrame, pd.S
     print(confusion_matrix(y_test, predictions))
     print("Classification report:")
     print(classification_report(y_test, predictions, target_names=["not CKD", "CKD"], zero_division=0))
-    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    joblib.dump(model, MODEL_PATH)
     pd.concat([x_test.reset_index(drop=True), y_test.reset_index(drop=True).rename("class")], axis=1).to_csv(TEST_PATH, index=False)
-    print(f"Saved model to {MODEL_PATH}")
     return model, x_train, y_train, x_test, y_test
 
 
 if __name__ == "__main__":
-    train_model()
+    parser = argparse.ArgumentParser(description="Evaluate the saved CKD model or train it again.")
+    parser.add_argument("--retrain", action="store_true", help="Train and save a fresh model instead of reusing the saved one.")
+    arguments = parser.parse_args()
+    train_model(retrain=arguments.retrain)

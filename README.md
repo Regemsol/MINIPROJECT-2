@@ -50,7 +50,7 @@ The script prints these scores and writes them to `data/selected_features.csv`.
 
 1. `src/preprocess.py` loads the raw CSV, drops rows with excessive missingness, fills numeric values with medians, fills categorical values with modes, and encodes categorical fields.
 2. `src/feature_selection.py` computes feature/target correlations, selects the top five predictors, and writes the reduced dataset.
-3. `src/train.py` performs a stratified 80/20 split, trains one KNN model with `n_neighbors=5`, prints metrics, and saves `models/knn_ckd.pkl` plus the test split.
+3. `src/train.py` performs a stratified 80/20 split and evaluates the saved KNN model. It trains and saves a model only when no saved model exists, or when run with `--retrain`.
 4. `notebooks/demo.ipynb` loads the saved model, plots the confusion matrix, prints a classification report, and predicts labels for manually entered sample patients.
 
 ## Setup & Run
@@ -61,17 +61,17 @@ cd ckd-risk-demo
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python src/preprocess.py
-python src/feature_selection.py
 python src/train.py
 jupyter notebook notebooks/demo.ipynb
 ```
+
+The saved model and prepared data are included, so preprocessing and feature selection are only needed when rebuilding the dataset. Use `python src/train.py --retrain` only when you intentionally want to train a fresh model.
 
 Alternatively, open the repository in GitHub Codespaces. The included `.devcontainer/devcontainer.json` installs the requirements during container creation.
 
 ## Sample Output
 
-Run `python src/train.py` to regenerate the metrics below from the committed data:
+Run `python src/train.py` to print metrics for the saved model using the committed data:
 
 ```text
 Accuracy: 0.9375
@@ -92,7 +92,7 @@ Confusion matrix:
 ## Demo Walkthrough
 
 1. Show the raw dataset and the five selected features.
-2. Run `train.py` live and explain the accuracy, precision, recall, F1-score, and confusion matrix.
+2. Run `train.py` to evaluate the saved model and explain the accuracy, precision, recall, F1-score, and confusion matrix. This does not retrain it.
 3. Open `notebooks/demo.ipynb` and run the final live-prediction cell.
 4. Explain that the predicted label is a model screening output for that sample, not a clinical diagnosis.
 
