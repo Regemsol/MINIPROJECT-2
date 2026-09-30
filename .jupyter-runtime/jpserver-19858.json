@@ -1,0 +1,13 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "password": false,
+  "pid": 19858,
+  "port": 8889,
+  "root_dir": "/workspaces/5024123-AI-CIA-P5/notebooks",
+  "secure": false,
+  "sock": "",
+  "token": "346687fd02da5eb1cb97f653beb5b397c5bb1295eae69ee0",
+  "url": "http://localhost:8889/",
+  "version": "2.21.0"
+}
